@@ -33,9 +33,6 @@ Qwadro acts as the platform abstraction layer that powers this implementation.
 ## 🛠️ Example Usage
 
 ```c
-// Draw custom background with Qwadro
-q_draw_custom_background();
-
 // Begin Nuklear UI frame
 if (nk_begin(ctx, "Control Panel", nk_rect(60, 60, 320, 240), NK_WINDOW_TITLE)) {
     nk_layout_row_dynamic(ctx, 30, 1);

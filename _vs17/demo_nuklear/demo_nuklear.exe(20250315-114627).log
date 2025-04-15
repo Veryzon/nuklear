@@ -1,0 +1,17 @@
+Booting...afxPool.c:313?AfxTakePoolUnit
+afxPool.c:609?AfxRequestPoolUnits
+afxPool.c:627?AfxRequestPoolUnits
+afxClass.c:517?_AfxAllocateObjects
+afxClass.c:1052?AfxAcquireObjects
+afxThread_PC.c:838?AfxAcquireThreads
+afxSystem_w32.c:423?_AfxSysCtor
+afxClass.c:598?_AfxClsObjCtor
+afxClass.c:605?_AfxClsObjCtor
+afxClass<System>(000007feecff8f70)afxClass.c:754?_AfxConstructObjects
+afxSystem.c:590?AfxBootstrapSystem
+afxPool.c:313?AfxTakePoolUnit
+afxPool.c:609?AfxRequestPoolUnits
+afxPool.c:627?AfxRequestPoolUnits
+afxClass.c:517?_AfxAllocateObjects
+afxHid.c:177?_AuxRegisterHids
+auxImplementation.c:207?auxScmHook
