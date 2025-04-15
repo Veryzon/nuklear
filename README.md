@@ -42,4 +42,5 @@ nk_end(ctx);
 ```
 
 Get help at gathering of developers on Discord.
+
 [![SIGMA Discord Server](https://discord.com/api/guilds/349379672351571969/widget.png?style=banner2)](https://sigmaco.org/discord)
