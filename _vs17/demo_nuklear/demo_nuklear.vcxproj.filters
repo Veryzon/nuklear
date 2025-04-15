@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="nuklear">
+      <UniqueIdentifier>{294f28cd-0f7b-463b-af67-2cbc1e905631}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="nuklear\demo">
+      <UniqueIdentifier>{3187afe2-c283-4a0d-965b-0735fc482b18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="nuklear\demo\qwadro">
+      <UniqueIdentifier>{ba0daa61-42b0-45e6-b225-d95a8545c99b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\nuklear\demo\qwadro\main.c">
+      <Filter>nuklear\demo\qwadro</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\nuklear\demo\qwadro\nuklear_qwadro.h">
+      <Filter>nuklear\demo\qwadro</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
