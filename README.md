@@ -33,16 +33,13 @@ Qwadro acts as the platform abstraction layer that powers this implementation.
 ## 🛠️ Example Usage
 
 ```c
-// Draw custom background with Qwadro
-q_draw_custom_background();
-
 // Begin Nuklear UI frame
 if (nk_begin(ctx, "Control Panel", nk_rect(60, 60, 320, 240), NK_WINDOW_TITLE)) {
     nk_layout_row_dynamic(ctx, 30, 1);
     nk_label(ctx, "Welcome to Qwadro UI!", NK_TEXT_LEFT);
 }
 nk_end(ctx);
-
+```
 
 Get help at gathering of developers on Discord.
 [![SIGMA Discord Server](https://discord.com/api/guilds/349379672351571969/widget.png?style=banner2)](https://sigmaco.org/discord)
