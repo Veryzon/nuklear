@@ -1,0 +1,3 @@
+Booting...afxPool.c:412?AfxTakePoolUnit
+afxPool.c:412?AfxTakePoolUnit
+(AfxGetPoolUnit(pool, idx, (0)))

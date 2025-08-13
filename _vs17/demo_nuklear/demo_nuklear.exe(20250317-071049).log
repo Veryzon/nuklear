@@ -1,0 +1,8 @@
+Booting...Mounting... <//./z/>(''),5Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\'),5Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\w64'),7Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\w64d'),7Mounting... <//./c/>('C:\Windows\System32'),5Loading... <e2coree.dll>Memory page Size: 4096HW threading: 2Loading... <e2synerg.dll>afxSystem.c:677?AfxBootstrapSystem
+afxDebug_w32.c:750?AfxRaiseException
+afxUri.c:806?_AfxParseUriParts
+afxDebug_w32.c:750?AfxRaiseException
+afxUri.c:806?_AfxParseUriParts
+(uri->fext <= 4)
+afxUri.c:806?_AfxParseUriParts
+afxDebug_w32.c:750?AfxRaiseException

@@ -1,0 +1,3 @@
+Booting...Mounting... <//./z/>(''),5Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\'),5Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\w32'),7Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\w32d'),7Mounting... <//./c/>('C:\Windows\SysWow64'),5Loading... <e2coree.dll>Memory page Size: 4096HW threading: 2Loading... <e2synerg.dll>afxSystem.c:677?AfxBootstrapSystem
+Loading... <//./z////tarzgl4.dll>Installing... <tarzgl4>Loading... <//./c/opengl32.dll>zglDrawDevice_W32.c:442?_ZglDdevCtorCb
+afxClass.c:598?_AfxClsObjCtor

@@ -1,0 +1,5 @@
+Booting...alloc(160, 16) => 005228e0   afxManifest.c:217!AfxDeployManifestrealloc(4, 16, 00000000) => 00510570   afxPool.c:311!AfxInflatePoolalloc(984, 16) => 00525240   afxPool.c:357!AfxTakePoolUnitafxThread_PC.c:757?_AfxThrCtorCb
+afxClass.c:598?_AfxClsObjCtor
+afxClass.c:605?_AfxClsObjCtor
+afxClass<Thread>(00525270)afxClass.c:754?_AfxConstructObjects
+afxClass.c:1059?AfxAcquireObjects

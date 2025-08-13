@@ -15,6 +15,7 @@
 
 // based on GLFW3 GL3 example
 
+#include "../../nuklear.h"
 #include "qwadro/inc/afxQwadro.h"
 
 enum nk_afx_init_state{
@@ -193,22 +194,19 @@ nk_afx_device_create(struct nk_afx* afx)
     AvxAcquireShaders(dev->dsys, 1, NIL, &fcode, &fsh);
 
     avxVertexLayout vlay = { 0 };
-    vlay.attrCnt = 3;
+    vlay.srcCnt = 1;
+    vlay.srcs[0].instRate = 0;
+    vlay.srcs[0].pin = 0;
+    vlay.srcs[0].attrCnt = 3;
     vlay.attrs[0].fmt = avxFormat_RG32f;
     vlay.attrs[0].location = 0;
     vlay.attrs[0].offset = offsetof(struct nk_afx_vertex, position);
-    vlay.attrs[0].srcIdx = 0;
     vlay.attrs[1].fmt = avxFormat_RG32f;
     vlay.attrs[1].location = 1;
     vlay.attrs[1].offset = offsetof(struct nk_afx_vertex, uv);
-    vlay.attrs[1].srcIdx = 0;
     vlay.attrs[2].fmt = avxFormat_RGBA8un;
     vlay.attrs[2].location = 2;
     vlay.attrs[2].offset = offsetof(struct nk_afx_vertex, col);
-    vlay.attrs[2].srcIdx = 0;
-    vlay.srcCnt = 1;
-    vlay.srcs[0].instanceRate = 0;
-    vlay.srcs[0].srcIdx = 0;
     avxVertexInput vdecl;
     AvxDeclareVertexInputs(dev->dsys, 1, &vlay, &vdecl);
 
@@ -314,20 +312,20 @@ nk_afx_device_upload_atlas(struct nk_afx* afx, const void *image, int width, int
 #endif
     avxRaster ras;
     avxRasterInfo rasi = { 0 };
-    rasi.usage = avxRasterUsage_RESAMPLE;
+    rasi.usage = avxRasterUsage_TEXTURE;
     rasi.fmt = avxFormat_RGBA8un;
-    rasi.extent.w = width;
-    rasi.extent.h = height;
+    rasi.whd.w = width;
+    rasi.whd.h = height;
     AvxAcquireRasters(dev->dsys, 1, &rasi, &ras);
 
     if (image)
     {
         avxRasterIo iop = { 0 };
-        iop.rgn.extent.w = rasi.extent.w;
-        iop.rgn.extent.h = rasi.extent.h;
-        iop.rgn.extent.d = 1;
-        AvxUpdateRaster(ras, image, 1, &iop, 0);
-        AvxWaitForDrawBridges(dev->dsys, 0, 0);
+        iop.rgn.whd.w = rasi.whd.w;
+        iop.rgn.whd.h = rasi.whd.h;
+        iop.rgn.whd.d = 1;
+        AvxUpdateRaster(ras, 1, &iop, image, 0);
+        AvxWaitForDrawBridges(dev->dsys, AFX_TIMEOUT_INFINITE, NIL);
     }
     dev->font_tex = ras;
 
@@ -447,7 +445,7 @@ nk_afx_render(struct nk_afx* afx, enum nk_anti_aliasing AA, int max_vertex_buffe
         maps[0].range = dev->vboSiz;
         maps[1].buf = dev->ebo;
         maps[1].range = dev->iboSiz;
-        AvxFlushBufferedMaps(dev->dsys, 2, maps);
+        AvxCohereMappedBuffers(dev->dsys, FALSE, 2, maps);
 
         avxBufferedStream stream = { 0 };
         stream.buf = dev->vbo;
@@ -589,9 +587,9 @@ nk_afx_clipboard_copy(nk_handle usr, const char *text, int len)
 NK_API struct nk_context*
 nk_afx_init(struct nk_afx* afx, afxWindow win, enum nk_afx_init_state init_state)
 {
-    afxDrawOutput dout;
-    AfxGetWindowDrawOutput(win, FALSE, &dout);
-    afx->ogl.dsys = AvxGetDrawOutputContext(dout);
+    afxSurface dout;
+    AfxGetWindowDrawOutput(win, NIL, &dout);
+    afx->ogl.dsys = AvxGetSurfaceSystem(dout);
 
     afx->ogl.vboSiz = MAX_VERTEX_BUFFER;
     afx->ogl.iboSiz = MAX_ELEMENT_BUFFER;
@@ -655,7 +653,7 @@ nk_afx_new_frame(struct nk_afx* afx)
     AfxGetWindowRect(win, NIL, &rc); // Nuklear can't handle input out of surface when it can't draw the entire window, including its frame.
     afx->width = rc.w;
     afx->height = rc.h;
-    AfxGetWindowRect(win, FALSE, &rc);
+    AfxGetWindowRect(win, NIL, &rc);
     afx->display_width = rc.w;
     afx->display_height = rc.h;
     afx->fb_scale.x = (float)afx->display_width/(float)afx->width;

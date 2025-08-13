@@ -1,0 +1,101 @@
+Booting...Mounting... <//./z/>(''),5Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\'),5Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\w64'),7Mounting... <//./z/>('E:\qwadro\repo\guis\qwd\w64d'),7Mounting... <//./c/>('C:\Windows\System32'),5Loading... <e2coree.dll>afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+Memory page Size: 4096HW threading: 2Loading... <e2synerg.dll>afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxModule_w32.c:556?AfxLoadModule
+afxSystem.c:677?AfxBootstrapSystem
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxManifest.c:252?AfxLoadInitializationFile
+Loading... <//./z////tarzgl4.inf.dll>afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxModule_w32.c:556?AfxLoadModule
+afxSystem.c:480?_AfxLoadAndAttachIcd
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxManifest.c:252?AfxLoadInitializationFile
+Loading... <//./z////wshell4d.i.dll>afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxString.c:31?AfxGetStringData
+afxString.c:31?AfxGetStringData
+(!base || s->len >= base)
+afxModule_w32.c:556?AfxLoadModule
+afxSystem.c:480?_AfxLoadAndAttachIcd
+afxDrawSystem.c:800?AvxConfigureDrawSystem
+afxDrawSystem.c:865?AvxEstablishDrawSystem
+main.c:106?main
+main.c:106?main
+((!1) || ((&dsys) && !(_AfxAssertObjects((1), (afxObject const*)(&dsys),(afxFcc_DSYS)))))
+afxSession.c:484?AfxAcquireSession
+afxClass.c:1158?_AfxAssertObjects
+afxClass.c:1158?_AfxAssertObjects
+(hdr->fcc == afxFcc_OBJ)

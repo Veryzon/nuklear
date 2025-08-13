@@ -1,0 +1,1 @@
+Booting...alloc(160, 16) => 005028e0   afxManifest.c:217!AfxDeployManifestrealloc(4, 16, 00000000) => 004f0570   afxPool.c:311!AfxInflatePoolalloc(984, 16) => 00505240   afxPool.c:357!AfxTakePoolUnit

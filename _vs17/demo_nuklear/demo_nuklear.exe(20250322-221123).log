@@ -1,0 +1,4 @@
+Booting...afxPool.c:215?AfxGetPoolUnit
+afxPool.c:215?AfxGetPoolUnit
+(pag->fcc == afxFcc_POOL)
+afxPool.c:341?AfxTakePoolUnit
