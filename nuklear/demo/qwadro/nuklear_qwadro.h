@@ -16,7 +16,7 @@
 // based on GLFW3 GL3 example
 
 #include "../../nuklear.h"
-#include "qwadro/inc/afxQwadro.h"
+#include "qwadro/afxQwadro.h"
 
 enum nk_afx_init_state{
     NK_AFX_DEFAULT=0,
@@ -194,10 +194,10 @@ nk_afx_device_create(struct nk_afx* afx)
     AvxAcquireShaders(dev->dsys, 1, NIL, &fcode, &fsh);
 
     avxVertexLayout vlay = { 0 };
-    vlay.srcCnt = 1;
-    vlay.srcs[0].instRate = 0;
-    vlay.srcs[0].pin = 0;
-    vlay.srcs[0].attrCnt = 3;
+    vlay.binCnt = 1;
+    vlay.bins[0].instRate = 0;
+    vlay.bins[0].pin = 0;
+    vlay.bins[0].attrCnt = 3;
     vlay.attrs[0].fmt = avxFormat_RG32f;
     vlay.attrs[0].location = 0;
     vlay.attrs[0].offset = offsetof(struct nk_afx_vertex, position);
@@ -220,7 +220,7 @@ nk_afx_device_create(struct nk_afx* afx)
     glActiveTexture(GL_TEXTURE0);
 #endif
     avxPipeline pip;
-    avxPipelineBlueprint pipb = { 0 };
+    avxPipelineConfig pipb = { 0 };
     pipb.primTop = avxTopology_TRI_LIST;
     pipb.cullMode = avxCullMode_NONE;
     pipb.fillMode = avxFillMode_FACE;
@@ -238,8 +238,20 @@ nk_afx_device_create(struct nk_afx* afx)
     pipb.colorOuts[0].blendConfig.aBlendOp = avxBlendOp_ADD;
     pipb.vin = vdecl;
     AvxAssemblePipelines(dev->dsys, 1, &pipb, &pip);
-    AvxRelinkPipelineFunction(pip, avxShaderType_VERTEX, vsh, NIL, NIL, NIL);
-    AvxRelinkPipelineFunction(pip, avxShaderType_FRAGMENT, fsh, NIL, NIL, NIL);
+    
+    avxShaderSpecialization shdSpecs[]=
+    {
+        {
+            .stage = avxShaderType_VERTEX,
+            .shd = vsh
+        },
+        {
+            .stage = avxShaderType_FRAGMENT,
+            .shd = fsh
+        }
+    };
+
+    AvxRelinkPipelineFunction(pip, 2, shdSpecs);
     dev->pip = pip;
 
     AfxDisposeObjects(1, &vsh);
@@ -324,13 +336,13 @@ nk_afx_device_upload_atlas(struct nk_afx* afx, const void *image, int width, int
         iop.rgn.whd.w = rasi.whd.w;
         iop.rgn.whd.h = rasi.whd.h;
         iop.rgn.whd.d = 1;
-        AvxUpdateRaster(ras, 1, &iop, image, 0);
+        AvxUpdateRaster(ras, 1, &iop, image, NIL, 0);
         AvxWaitForDrawBridges(dev->dsys, AFX_TIMEOUT_INFINITE, NIL);
     }
     dev->font_tex = ras;
 
     avxSampler samp;
-    avxSamplerInfo scfg = { 0 };
+    avxSamplerConfig scfg = { 0 };
     scfg.magnify = avxTexelFilter_LINEAR;
     scfg.minify = avxTexelFilter_LINEAR;
     AvxDeclareSamplers(dev->dsys, 1, &scfg, &samp);
@@ -467,11 +479,11 @@ nk_afx_render(struct nk_afx* afx, enum nk_anti_aliasing AA, int max_vertex_buffe
             glBindTexture(GL_TEXTURE_2D, (GLuint)cmd->texture.id);
 #endif
 #if 0
-            AvxCmdBindSamplers(dctx, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
+            AvxCmdBindSamplers(dctx, avxBus_DRAW, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
 #else
-            AvxCmdBindSamplers(dctx, 0, 0, 1, &dev->font_samp); // <<<<<<<<<<<<<<
+            AvxCmdBindSamplers(dctx, avxBus_DRAW, 0, 0, 1, &dev->font_samp); // <<<<<<<<<<<<<<
 #endif
-            AvxCmdBindRasters(dctx, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
+            AvxCmdBindRasters(dctx, avxBus_DRAW, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
 
 #if 0
             glScissor(
@@ -482,12 +494,12 @@ nk_afx_render(struct nk_afx* afx, enum nk_anti_aliasing AA, int max_vertex_buffe
 #endif
 
 #if 0
-            afxRect rc = AVX_RECT((cmd->clip_rect.x * glfw->fb_scale.x),
+            afxRect rc = AFX_RECT((cmd->clip_rect.x * glfw->fb_scale.x),
                                 ((glfw->height - (afxInt)(cmd->clip_rect.y + cmd->clip_rect.h)) * glfw->fb_scale.y),
                                 (cmd->clip_rect.w * glfw->fb_scale.x),
                                 (cmd->clip_rect.h * glfw->fb_scale.y));
 #else
-            afxRect rc = AVX_RECT(  (NK_MAX(cmd->clip_rect.x * scale[0], 0.f)),
+            afxRect rc = AFX_RECT(  (NK_MAX(cmd->clip_rect.x * scale[0], 0.f)),
                                     (NK_MAX((afx->height - (cmd->clip_rect.y + cmd->clip_rect.h)) * scale[1], 0.f)), // we must invert this to originate at bottom.
                                     (cmd->clip_rect.w * scale[0]),
                                     (cmd->clip_rect.h * scale[1]));
@@ -588,8 +600,8 @@ NK_API struct nk_context*
 nk_afx_init(struct nk_afx* afx, afxWindow win, enum nk_afx_init_state init_state)
 {
     afxSurface dout;
-    AfxGetWindowDrawOutput(win, NIL, &dout);
-    afx->ogl.dsys = AvxGetSurfaceSystem(dout);
+    AfxGetWindowSurface(win, &dout);
+    afx->ogl.dsys = AvxGetSurfaceHost(dout);
 
     afx->ogl.vboSiz = MAX_VERTEX_BUFFER;
     afx->ogl.iboSiz = MAX_ELEMENT_BUFFER;
@@ -719,9 +731,9 @@ nk_afx_new_frame(struct nk_afx* afx)
         ctx->input.mouse.pos.y = ctx->input.mouse.prev.y;
     }
 #endif
-    nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, AfxIsLmbPressed(0));
-    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, AfxIsMmbPressed(0));
-    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, AfxIsRmbPressed(0));
+    nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, AfxIsMousePressed(0, AFX_LMB));
+    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, AfxIsMousePressed(0, AFX_MMB));
+    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, AfxIsMousePressed(0, AFX_RMB));
     nk_input_button(ctx, NK_BUTTON_DOUBLE, (int)afx->double_click_pos.x, (int)afx->double_click_pos.y, afx->is_double_click_down);
     nk_input_scroll(ctx, afx->scroll);
     nk_input_end(&afx->ctx);

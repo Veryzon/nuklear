@@ -10,7 +10,7 @@
 #include <limits.h>
 #include <time.h>
 
-#include "qwadro/inc/afxQwadro.h"
+#include "qwadro/afxQwadro.h"
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
@@ -99,8 +99,10 @@ int main(void)
     afxUnit drawIcd = 0;
     afxDrawSystem dsys;
     afxDrawSystemConfig dsyc = { 0 };
-    AvxConfigureDrawSystem(drawIcd, afxDrawCaps_DRAW, afxAcceleration_DPU, &dsyc);
+    dsyc.caps = afxDrawFn_DRAW;
+    dsyc.accel = afxAcceleration_DPU;
     dsyc.exuCnt = 1;
+    AvxConfigureDrawSystem(drawIcd, &dsyc);
     AvxEstablishDrawSystem(drawIcd, &dsyc, &dsys);
     AFX_ASSERT_OBJECTS(afxFcc_DSYS, 1, &dsys);
 
@@ -127,24 +129,26 @@ int main(void)
     // Acquire a drawable surface
 
     afxWindow wnd;
-    afxWindowConfig wrc = { 0 };
-    wrc.udd = &afx;
-    wrc.dsys = dsys;
-    AfxConfigureWindow(&wrc, NIL, AFX_V3D(0.5, 0.5, 1));
-    //wrc.surface.bufFmt[0] = avxFormat_BGRA4un;
-    //wrc.surface.bufFmt[1] = avxFormat_D32fS8u;
-    wrc.surface.canvas.slots[1].fmt = avxFormat_D32f;
-    //wrc.surface.bufFmt[2] = avxFormat_S8u;
-    AfxAcquireWindow(&wrc, &wnd);
-    win = wnd;
-    //AfxAdjustWindowFromNdc(wnd, NIL, AFX_V3D(0.5, 0.5, 1));
-
-    afxDrawOutput dout;
-    AfxGetWindowDrawOutput(wnd, NIL, &dout);
+    afxSurface dout;
+    afxWindowConfig wcfg = { 0 };
+    wcfg.udd = &afx;
+    wcfg.dsys = dsys;
+    //wcfg.dout.ccfg.bins[0].fmt = avxFormat_BGRA4un;
+    //wcfg.dout.ccfg.bins[1].fmt = avxFormat_D32fS8u;
+    wcfg.dout.ccfg.bins[1].fmt = avxFormat_D32f;
+    //wcfg.dout.ccfg.bins[2].fmt = avxFormat_S8u;
+    AfxConfigureWindow(&wcfg, NIL, AFX_V3D(0.5, 0.5, 1));
+    AfxAcquireWindow(&wcfg, &wnd);
+    AFX_ASSERT_OBJECTS(afxFcc_WND, 1, &wnd);
+    AfxGetWindowSurface(wnd, &dout);
     AFX_ASSERT_OBJECTS(afxFcc_DOUT, 1, &dout);
 
+    win = wnd;
+
     avxFence fence;
-    AvxAcquireFences(dsys, FALSE, 1, &fence);
+    avxFenceInfo fenci = { 0 };
+    fenci.initialVal = FALSE;
+    AvxAcquireFences(dsys, 1, &fenci, &fence);
 
     #ifdef INCLUDE_CONFIGURATOR
     static struct nk_color color_table[NK_COLOR_COUNT];
@@ -180,7 +184,9 @@ int main(void)
 #endif
 
     afxDrawContext drawContexts[3];
-    AvxAcquireDrawContexts(dsys, afxDrawCaps_DRAW, NIL, TRUE, FALSE, 3, drawContexts);
+    avxContextInfo dctxi = { 0 };
+    dctxi.caps = afxDrawFn_DRAW;
+    AvxAcquireDrawContexts(dsys, &dctxi, 3, drawContexts);
 
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
     while (1)
@@ -256,7 +262,7 @@ int main(void)
         afxSwapBuffers(win);
 #endif
         afxUnit outBufIdx = 0;
-        if (AvxLockDrawOutputBuffer(dout, 0, NIL, NIL, NIL, &outBufIdx))
+        if (AvxLockSurfaceBuffer(dout, AFX_TIMEOUT_NONE, NIL, &outBufIdx, NIL))
             continue;
 
         afxDrawContext dctx = drawContexts[outBufIdx];
@@ -265,7 +271,7 @@ int main(void)
         if (AvxRecordDrawCommands(dctx, TRUE, FALSE, &frameBatchId))
         {
             AfxThrowError();
-            AvxUnlockDrawOutputBuffer(dout, outBufIdx);
+            AvxUnlockSurfaceBuffer(dout, outBufIdx);
             continue;
         }
 #if 0
@@ -276,17 +282,16 @@ int main(void)
             int a = 1;
         }
 #endif
+        afxRect area;
         avxCanvas canv;
         avxRange canvWhd;
-        AvxGetDrawOutputCanvas(dout, outBufIdx, &canv);
+        AvxGetSurfaceCanvas(dout, outBufIdx, &canv, &area);
         AFX_ASSERT_OBJECTS(afxFcc_CANV, 1, &canv);
-        canvWhd = AvxGetCanvasArea(canv, AVX_ORIGIN_ZERO);
 
         {
             avxDrawScope dps = { 0 };
             dps.canv = canv;
-            dps.area = AVX_RECT(0, 0, canvWhd.w, canvWhd.h);
-            dps.layerCnt = 1;
+            dps.area.area = area;
             dps.targetCnt = 1;
             dps.targets[0].clearVal.rgba[0] = bg.r;
             dps.targets[0].clearVal.rgba[1] = bg.g;
@@ -294,9 +299,9 @@ int main(void)
             dps.targets[0].clearVal.rgba[3] = bg.a;
             dps.targets[0].loadOp = avxLoadOp_CLEAR;
             dps.targets[0].storeOp = avxStoreOp_STORE;
-            dps.depth.clearVal.depth = 1.0;
-            dps.depth.clearVal.stencil = 0;
-            dps.depth.loadOp = avxLoadOp_CLEAR;
+            dps.ds[0].clearVal.depth = 1.0;
+            dps.ds[0].clearVal.stencil = 0;
+            dps.ds[0].loadOp = avxLoadOp_CLEAR;
             //dps.depth.storeOp = avxStoreOp_STORE;            
 
             AvxCmdCommenceDrawScope(dctx, &dps);
@@ -312,7 +317,7 @@ int main(void)
         if (AvxCompileDrawCommands(dctx, frameBatchId))
         {
             AfxThrowError();
-            AvxUnlockDrawOutputBuffer(dout, outBufIdx);
+            AvxUnlockSurfaceBuffer(dout, outBufIdx);
             AvxRecycleDrawCommands(dctx, frameBatchId, TRUE);
             continue;
         }
@@ -322,18 +327,20 @@ int main(void)
         avxFence drawCompletedFence = fence;
         AvxResetFences(dsys, 1, &fence);
         subm.fence = drawCompletedFence;
+        subm.dctx = dctx;
+        subm.batchId = frameBatchId;
 
         //if (AvxExecuteDrawCommands(dque, &subm, 1, &dctx))
-        if (AvxExecuteDrawCommands(dsys, &subm, 1, &dctx, &frameBatchId))
+        if (AvxExecuteDrawCommands(dsys, 1, &subm))
         {
             AfxThrowError();
-            AvxUnlockDrawOutputBuffer(dout, outBufIdx);
+            AvxUnlockSurfaceBuffer(dout, outBufIdx);
             AvxRecycleDrawCommands(dctx, frameBatchId, TRUE);
             continue;
         }
 
         //AvxWaitForDrawQueue(dsys, 0, subm.baseQueIdx, 0);
-        AvxWaitForDrawBridges(dsys, AFX_TIMEOUT_INFINITE, subm.exuMask);
+        //AvxWaitForDrawBridges(dsys, AFX_TIMEOUT_INFINITE, subm.exuMask);
         //AvxWaitForDrawSystem(dsys, AFX_TIMEOUT_INFINITE);
 #if 0
         int a = 0;
@@ -352,11 +359,13 @@ int main(void)
 #endif
         AFX_ASSERT(3 > outBufIdx);
         avxPresentation pres = { 0 };
-        //if (AvxPresentDrawOutputs(dque, &pres, NIL, 1, &dout, &outBufIdx, NIL))
-        if (AvxPresentDrawOutputs(dsys, &pres, NIL, 1, &dout, &outBufIdx, NIL))
+        pres.dout = dout;
+        pres.bufIdx = outBufIdx;
+
+        if (AvxPresentSurfaces(dsys, 1, &pres))
         {
             AfxThrowError();
-            AvxUnlockDrawOutputBuffer(dout, outBufIdx);
+            AvxUnlockSurfaceBuffer(dout, outBufIdx);
             continue;
         }
 
