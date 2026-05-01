@@ -6,3 +6,4 @@
 /_vs17/**/.vs
 /_vs17/**/Debug
 /_vs17/**/Release
+/**/*.dmp

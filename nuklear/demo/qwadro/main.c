@@ -32,6 +32,62 @@
 
 // based on GLFW3 GL3 example
 
+#if 0
+
+afxCmdId AfxCmdTextInputInlined(struct nk_context *ctx, afxTextInputInfo const* info)
+{
+    if (pushCols)
+    {
+        nk_layout_row_begin(ctx, NK_DYNAMIC, 30, 1);
+    }
+    if (pushRows)
+    {
+        nk_layout_row_push(ctx, 0.333); // relative width
+    }
+    //nk_layout_row_static(ctx, 25, 200, 1);
+    nk_edit_string(ctx, NK_EDIT_FIELD, info->caption.start, &info->caption.len, info->caption.cap, nk_filter_default);
+    if (pushCols)
+    {
+        nk_layout_row_end(ctx);
+    }
+    return 0;
+}
+
+AFX_DEFINE_STRUCT(afxCheckboxInfo)
+{
+    afxString caption;
+    afxString hint; // on_hover_text
+};
+
+afxCmdId AfxCmdCheckbox(struct nk_context *ctx, afxCheckboxInfo const* info, afxBool* checked)
+{
+    if (pushCols)
+    {
+        nk_layout_row_begin(ctx, NK_DYNAMIC, 30, 1);
+    }
+    if (pushRows)
+    {
+        nk_layout_row_push(ctx, 0.333); // relative width
+    }
+    nk_checkbox_text(ctx, info->caption.start, info->caption.len, checked);
+    if (pushCols)
+    {
+        nk_layout_row_end(ctx);
+    }
+    return 0;
+}
+
+afxCmdId AfxCmdDisable(struct nk_context *ctx)
+{
+
+}
+
+afxCmdId AfxCmdSeparator(struct nk_context *ctx)
+{
+    
+}
+#endif
+
 /* ===============================================================
  *
  *                          EXAMPLE
@@ -91,15 +147,15 @@ int main(void)
     // Boot up the Qwadro (if necessary)
 
     afxSystemConfig sysc = { 0 };
-    AfxConfigureSystem(&sysc);
+    AfxConfigureSystem(&sysc, NIL);
     AfxBootstrapSystem(&sysc);
 
     // Set up the draw system
 
     afxUnit drawIcd = 0;
     afxDrawSystem dsys;
-    afxDrawSystemConfig dsyc = { 0 };
-    dsyc.caps = afxDrawFn_DRAW;
+    avxSystemConfig dsyc = { 0 };
+    dsyc.caps = avxAptitude_GFX;
     dsyc.accel = afxAcceleration_DPU;
     dsyc.exuCnt = 1;
     AvxConfigureDrawSystem(drawIcd, &dsyc);
@@ -109,13 +165,13 @@ int main(void)
     // Open a session
 
     afxUnit shIcd = 0;
-    afxSession ses;
-    afxSessionConfig scfg = { 0 };
-    scfg.dsys = dsys; // integrate our draw system
+    afxEnvironment env;
+    afxEnvironmentConfig ecfg = { 0 };
+    ecfg.dsys = dsys; // integrate our draw system
     //scfg.msys = msys; // integrate our mix system
-    AfxAcquireSession(shIcd, &scfg, &ses);
-    AFX_ASSERT_OBJECTS(afxFcc_SES, 1, &ses);
-    AfxOpenSession(ses, NIL, NIL, NIL);
+    AfxConfigureEnvironment(shIcd, &ecfg);
+    AfxEstablishEnvironment(shIcd, &ecfg, &env);
+    AFX_ASSERT_OBJECTS(afxFcc_ENV, 1, &env);
 
 
     /* Platform */
@@ -132,13 +188,15 @@ int main(void)
     afxSurface dout;
     afxWindowConfig wcfg = { 0 };
     wcfg.udd = &afx;
-    wcfg.dsys = dsys;
+    wcfg.dout.dsys = dsys;
     //wcfg.dout.ccfg.bins[0].fmt = avxFormat_BGRA4un;
     //wcfg.dout.ccfg.bins[1].fmt = avxFormat_D32fS8u;
+    wcfg.anchor = afxAnchor_CENTER | afxAnchor_TOP;
+    AfxConfigureWindow(env, &wcfg, NIL, AFX_V3D(0.5, 0.5, 1));
+    wcfg.dout.ccfg.binCnt += 1;
     wcfg.dout.ccfg.bins[1].fmt = avxFormat_D32f;
     //wcfg.dout.ccfg.bins[2].fmt = avxFormat_S8u;
-    AfxConfigureWindow(&wcfg, NIL, AFX_V3D(0.5, 0.5, 1));
-    AfxAcquireWindow(&wcfg, &wnd);
+    AfxAcquireWindow(env, &wcfg, &wnd);
     AFX_ASSERT_OBJECTS(afxFcc_WND, 1, &wnd);
     AfxGetWindowSurface(wnd, &dout);
     AFX_ASSERT_OBJECTS(afxFcc_DOUT, 1, &dout);
@@ -156,7 +214,7 @@ int main(void)
     #endif
 
     afxRect rc;
-    AfxGetWindowRect(win, &rc, NIL);
+    AfxGetWindowRect(win, afxAnchor_CENTER | afxAnchor_MIDDLE, &rc);
     width = rc.w;
     height = rc.h;
 
@@ -184,15 +242,67 @@ int main(void)
 #endif
 
     afxDrawContext drawContexts[3];
-    avxContextInfo dctxi = { 0 };
-    dctxi.caps = afxDrawFn_DRAW;
-    AvxAcquireDrawContexts(dsys, &dctxi, 3, drawContexts);
+    avxContextConfig dctxi = { 0 };
+    dctxi.caps = avxAptitude_GFX;
+    AvxAcquireDrawContexts(dsys, NIL, &dctxi, 3, drawContexts);
+
+    afxWidget wid;
+    afxWidgetConfig widc = { 0 };
+    AfxAcquireWidgets(wnd, 1, &widc, &wid);
 
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
+
+    afxClock startClock, lastClock;
+    AfxGetClock(&startClock);
+    lastClock = startClock;
+    afxReal64 ft = 0;
+    afxUnit fpsi = 0;
+    afxUnit fps = 0;
+
     while (1)
     {
         /* Input */
         nk_afx_new_frame(&afx);
+#if 0
+        {
+            struct nk_color windows7_bg = nk_rgba(240, 240, 240, 255);  // Light gray background
+            struct nk_color windows7_fg = nk_rgba(0, 0, 0, 255);        // Black text
+            struct nk_color windows7_button = nk_rgba(70, 130, 180, 255); // Blue button color
+            struct nk_color windows7_button_hover = nk_rgba(100, 150, 210, 255); // Hover state
+
+            // Set up Nuklear theme
+            struct nk_style *style = &ctx->style;
+            style->window.background = windows7_bg;
+            style->button.normal = nk_style_item_color(windows7_button);
+            style->button.hover = nk_style_item_color(windows7_button_hover);
+            style->button.active = nk_style_item_color(nk_rgba(100, 100, 255, 255)); // Active button color
+            style->text.color = windows7_fg;
+            style->window.header.normal = nk_style_item_color(nk_rgba(0, 120, 215, 255)); // Blue header
+            style->window.header.hover = nk_style_item_color(nk_rgba(30, 144, 255, 255));
+            style->window.header.active = nk_style_item_color(nk_rgba(100, 149, 237, 255));
+
+            style->window.rounding = AFX_PI;
+            style->button.rounding = AFX_PI;
+            style->slider.rounding = AFX_PI;
+            style->window.border_color = nk_rgba(200, 200, 200, 255); // Light gray border
+            //style->window.border_width = 2;  // Thin border
+            style->window.border = 2;  // Thin border
+            style->window.header.label_normal = (nk_rgba(0, 120, 215, 255)); // Blue window title
+            style->window.header.label_hover = (nk_rgba(70, 130, 180, 255)); // Hover effect
+            style->window.header.label_active = (nk_rgba(100, 149, 237, 255)); // Active window title
+
+            style->button.normal = nk_style_item_color(nk_rgba(0, 120, 215, 255)); // Normal state
+            style->button.hover = nk_style_item_color(nk_rgba(0, 130, 255, 255));  // Hover state
+            style->button.active = nk_style_item_color(nk_rgba(70, 130, 180, 255)); // Active state
+
+            style->menu_button.normal = nk_style_item_color(nk_rgba(240, 240, 240, 255));
+            style->menu_button.hover = nk_style_item_color(nk_rgba(100, 149, 237, 255)); // Hover effect
+            style->menu_button.active = nk_style_item_color(nk_rgba(70, 130, 180, 255)); // Active state
+
+            style->window.background = nk_rgba(255, 255, 255, 150); // Semi-transparent white for the "glass" effect
+            style->window.border_color = nk_rgba(200, 200, 200, 200); // Soft light border
+        }
+#endif
 
         /* GUI */
         if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),
@@ -205,7 +315,7 @@ int main(void)
             nk_layout_row_static(ctx, 30, 80, 1);
             if (nk_button_label(ctx, "button"))
                 fprintf(stdout, "button pressed\n");
-
+            
             nk_layout_row_dynamic(ctx, 30, 2);
             if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
             if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
@@ -228,7 +338,66 @@ int main(void)
             }
         }
         nk_end(ctx);
+#if 0
+        if (afxError_SUCCESS == AfxLockWidget(wid))
+        {
+            afxString2048 sb;
+            AfxMakeString2048(&sb, &AFX_STRING("# Windows Options"));
 
+            afxPanelInfo panelInfo = { 0 };
+            panelInfo.bounds = AFX_RECT(50, 50, 500, 500);
+            panelInfo.caption = sb.s;
+            if (AfxGuiCommencePanel(wid, &panelInfo))
+            {
+                if (AfxGuiPushLayout(wid, auxLayoutDirection_HORIZONTAL))
+                {
+                    afxLabelInfo labelInfo = { 0 };
+                    labelInfo.caption = AFX_STRING("title:");
+                    AfxGuiLabel(wid, &labelInfo);
+                    afxTextInputInfo teditInfo = { 0 };
+                    teditInfo.caption = sb.s;
+                    AfxGuiTextInputInlined(wid, &teditInfo);
+                    AfxGuiPopLayout(wid);
+                }
+                if (AfxGuiPushLayout(wid, auxLayoutDirection_HORIZONTAL))
+                {
+                    if (AfxGuiPushGroup(wid, &AFX_STRING("group")))
+                    {
+                        if (AfxGuiPushLayout(wid, auxLayoutDirection_VERTICAL))
+                        {
+                            afxBool checked = TRUE;
+                            afxCheckboxInfo chkInfo = { 0 };
+                            chkInfo.caption = AFX_STRING("1");
+                            AfxGuiCheckbox(wid, &chkInfo, &checked);
+                            chkInfo.caption = AFX_STRING("2");
+                            AfxGuiCheckbox(wid, &chkInfo, &checked);
+                            chkInfo.caption = AFX_STRING("3");
+                            AfxGuiCheckbox(wid, &chkInfo, &checked);
+                            AfxGuiPopLayout(wid);
+                        }
+                        AfxGuiPopGroup(wid);
+                    }
+                    if (AfxGuiPushGroup(wid, &AFX_STRING("group1")))
+                    {
+                        if (AfxGuiPushLayout(wid, auxLayoutDirection_VERTICAL))
+                        {
+                            afxBool checked = TRUE;
+                            afxCheckboxInfo chkInfo = { 0 };
+                            chkInfo.caption = AFX_STRING("anchored");
+                            AfxGuiCheckbox(wid, &chkInfo, &checked);
+
+                            AfxGuiPopLayout(wid);
+                        }
+                        AfxGuiPopGroup(wid);
+                    }
+                    AfxGuiPopLayout(wid);
+                }
+                AfxGuiConcludePanel(wid);
+            }
+            AfxUnlockWidget(wid);
+        }
+#endif
+#if !0
         /* -------------- EXAMPLES ---------------- */
         #ifdef INCLUDE_CALCULATOR
           calculator(ctx);
@@ -261,37 +430,44 @@ int main(void)
         nk_afx_render(&afx, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
         afxSwapBuffers(win);
 #endif
+#endif
+
         afxUnit outBufIdx = 0;
-        if (AvxLockSurfaceBuffer(dout, AFX_TIMEOUT_NONE, NIL, &outBufIdx, NIL))
+        if (AfxFailed(AvxLockSurfaceBuffer(dout, AFX_TIMEOUT_IGNORED, NIL, NIL, &outBufIdx)))
             continue;
 
+#if 0
         afxDrawContext dctx = drawContexts[outBufIdx];
-
-        afxUnit frameBatchId;
-        if (AvxRecordDrawCommands(dctx, TRUE, FALSE, &frameBatchId))
+#else
+        afxDrawContext dctx;
+        avxContextConfig dcc = { 0 };
+        dcc.caps = avxAptitude_GFX;
+        AvxAcquireDrawContexts(dsys, NIL, &dcc, 1, &dctx);
+#endif
+        if (AfxFailed(AvxPrepareDrawCommands(dctx, TRUE, avxCmdFlag_ONCE)))
         {
             AfxThrowError();
             AvxUnlockSurfaceBuffer(dout, outBufIdx);
             continue;
         }
+        else
+        {
 #if 0
-        AfxReportf(0, AfxHere(), "%d %d", outBufIdx, frameBatchId);
+            AfxReportf(0, AfxHere(), "%d %d", outBufIdx, frameBatchId);
 
-        if (frameBatchId != 0)
-        {
-            int a = 1;
-        }
+            if (frameBatchId != 0)
+            {
+                int a = 1;
+            }
 #endif
-        afxRect area;
-        avxCanvas canv;
-        avxRange canvWhd;
-        AvxGetSurfaceCanvas(dout, outBufIdx, &canv, &area);
-        AFX_ASSERT_OBJECTS(afxFcc_CANV, 1, &canv);
+            avxCanvas canv;
+            afxLayeredRect bounds;
+            AvxGetSurfaceCanvas(dout, outBufIdx, &canv, &bounds);
+            AFX_ASSERT_OBJECTS(afxFcc_CANV, 1, &canv);
 
-        {
             avxDrawScope dps = { 0 };
             dps.canv = canv;
-            dps.area.area = area;
+            dps.bounds = bounds;
             dps.targetCnt = 1;
             dps.targets[0].clearVal.rgba[0] = bg.r;
             dps.targets[0].clearVal.rgba[1] = bg.g;
@@ -302,42 +478,47 @@ int main(void)
             dps.ds[0].clearVal.depth = 1.0;
             dps.ds[0].clearVal.stencil = 0;
             dps.ds[0].loadOp = avxLoadOp_CLEAR;
-            //dps.depth.storeOp = avxStoreOp_STORE;            
+            //dps.ds[0].storeOp = avxStoreOp_STORE;            
 
-            AvxCmdCommenceDrawScope(dctx, &dps);
+            if (AfxSucceded(AvxCmdCommenceDrawScope(dctx, &dps)))
+            {
 
-            nk_afx_render(&afx, NK_ANTI_ALIASING_OFF, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER, dctx);
+                nk_afx_render(&afx, NK_ANTI_ALIASING_OFF, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER, dctx);
 
-            //TestSvg(vg, dctx, canvWhd);
-            AvxCmdConcludeDrawScope(dctx);
+                //AfxRedrawWidgets(wnd, &dps.bounds.area, dctx);
+
+                //TestSvg(vg, dctx, canvWhd);
+                AvxCmdConcludeDrawScope(dctx);
+            }
+
+            afxSemaphore dscrCompleteSem = NIL;
+
+            if (AfxFailed(AvxCompileDrawCommands(dctx)))
+            {
+                AfxThrowError();
+                AvxUnlockSurfaceBuffer(dout, outBufIdx);
+                AvxExhaustDrawContext(dctx, TRUE);
+                continue;
+            }
+
+            avxSubmission subm = { 0 };
+            subm.exuMask = AFX_BITMASK(0);
+            avxFence drawCompletedFence = fence;
+            //AvxResetFences(dsys, 1, &fence);
+            //subm.signal = drawCompletedFence;
+            subm.dctx = dctx;
+
+            //if (AvxExecuteDrawCommands(dque, &subm, 1, &dctx))
+            if (AfxFailed(AvxExecuteDrawCommands(dsys, 1, &subm, NIL)))
+            {
+                AfxThrowError();
+                AvxUnlockSurfaceBuffer(dout, outBufIdx);
+                AvxExhaustDrawContext(dctx, TRUE);
+                continue;
+            }
         }
 
-        afxSemaphore dscrCompleteSem = NIL;
-
-        if (AvxCompileDrawCommands(dctx, frameBatchId))
-        {
-            AfxThrowError();
-            AvxUnlockSurfaceBuffer(dout, outBufIdx);
-            AvxRecycleDrawCommands(dctx, frameBatchId, TRUE);
-            continue;
-        }
-
-        avxSubmission subm = { 0 };
-        subm.exuMask = AFX_BITMASK(0);
-        avxFence drawCompletedFence = fence;
-        AvxResetFences(dsys, 1, &fence);
-        subm.fence = drawCompletedFence;
-        subm.dctx = dctx;
-        subm.batchId = frameBatchId;
-
-        //if (AvxExecuteDrawCommands(dque, &subm, 1, &dctx))
-        if (AvxExecuteDrawCommands(dsys, 1, &subm))
-        {
-            AfxThrowError();
-            AvxUnlockSurfaceBuffer(dout, outBufIdx);
-            AvxRecycleDrawCommands(dctx, frameBatchId, TRUE);
-            continue;
-        }
+        AfxDisposeObjects(1, &dctx);
 
         //AvxWaitForDrawQueue(dsys, 0, subm.baseQueIdx, 0);
         //AvxWaitForDrawBridges(dsys, AFX_TIMEOUT_INFINITE, subm.exuMask);
@@ -362,22 +543,38 @@ int main(void)
         pres.dout = dout;
         pres.bufIdx = outBufIdx;
 
-        if (AvxPresentSurfaces(dsys, 1, &pres))
+        if (AfxFailed(AvxPresentSurfaces(dsys, 1, &pres, NIL)))
         {
             AfxThrowError();
             AvxUnlockSurfaceBuffer(dout, outBufIdx);
             continue;
         }
 
-        AfxPollInput(NIL, 0);
+        afxClock currClock;
+        AfxGetClock(&currClock);
+        afxReal64 ct = AfxGetSecondsElapsed(&startClock, &currClock);
+        afxReal64 dt = AfxGetSecondsElapsed(&lastClock, &currClock);
+        lastClock = currClock;
+
+        if (ct - ft >= 1.0)
+        {
+            fps = fpsi;
+            fpsi = 0;
+            ft = ct;
+        }
+        ++fpsi;
+        AfxFormatWindowTitle(wnd, "FPS %u %u", fps, 0);
+
+
+        AfxDoUx(NIL, AFX_TIMEOUT_INFINITE);
     }
     nk_afx_shutdown(&afx);
 
     AfxDisposeObjects(1, &wnd);
-    AfxDisposeObjects(1, &ses);
+    AfxDisposeObjects(1, &env);
     AfxDisposeObjects(1, &dsys);
 
-    AfxDoSystemShutdown(0);
+    AfxAbolishSystem(0);
     AfxYield();
 
     return 0;

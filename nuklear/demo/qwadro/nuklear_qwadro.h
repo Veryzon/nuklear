@@ -1,4 +1,20 @@
 /*
+ *           ::::::::    :::::::::::    ::::::::    ::::     ::::       :::
+ *          :+:    :+:       :+:       :+:    :+:   +:+:+: :+:+:+     :+: :+:
+ *          +:+              +:+       +:+          +:+ +:+:+ +:+    +:+   +:+
+ *          +#++:++#++       +#+       :#:          +#+  +:+  +#+   +#++:++#++:
+ *                 +#+       +#+       +#+   +#+#   +#+       +#+   +#+     +#+
+ *          #+#    #+#       #+#       #+#    #+#   #+#       #+#   #+#     #+#
+ *           ########    ###########    ########    ###       ###   ###     ###
+ *
+ *                     S I G M A   T E C H N O L O G Y   G R O U P
+ *
+ *                                   Public Test Build
+ *                               (c) 2017 SIGMA FEDERATION
+ *                             <https://sigmaco.org/qwadro/>
+ */
+
+/*
  * Nuklear - 1.32.0 - public domain
  * no warrenty implied; use at your own risk.
  * authored from 2015-2016 by Micha Mettke
@@ -108,6 +124,7 @@ struct nk_afx_vertex {
 NK_API void
 nk_afx_device_create(struct nk_afx* afx)
 {
+    afxError err = { 0 };
     struct nk_afx_device *dev = &afx->ogl;
     nk_buffer_init_default(&dev->cmds);
 
@@ -161,54 +178,42 @@ nk_afx_device_create(struct nk_afx* afx)
     dev->attrib_col = glGetAttribLocation(dev->prog, "Color");
 #endif
 
-    static const afxChar *vertex_shader =
-        "\nPUSH(Mtx)\n"
-        "{\n"
-        "   mat4 ProjMtx;\n"
-        "};\n"
-        "IN(0, vec2, Position);\n"
-        "IN(1, vec2, TexCoord);\n"
-        "IN(2, vec4, Color);\n"
-        "out vec2 Frag_UV;\n"
-        "out vec4 Frag_Color;\n"
-        "void main() {\n"
-        "   Frag_UV = TexCoord;\n"
-        "   Frag_Color = Color;\n"
-        "   gl_Position = ProjMtx * vec4(Position.xy, 0, 1);\n"
-        "}\n";
-    static const afxChar *fragment_shader =
-        "\nprecision mediump float;\n"
-        "TEXTURE(0, 0, sampler2D, Texture);\n"
-        "in vec2 Frag_UV;\n"
-        "in vec4 Frag_Color;\n"
-        "OUT(0, vec4, Out_Color);\n"
-        "void main(){\n"
-        "   Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
-        "}\n";
-
-    avxShader vsh, fsh;
-    afxString vcode, fcode;
-    AfxMakeString(&vcode, 0, vertex_shader, 0);
-    AfxMakeString(&fcode, 0, fragment_shader, 0);
-    AvxAcquireShaders(dev->dsys, 1, NIL, &vcode, &vsh);
-    AvxAcquireShaders(dev->dsys, 1, NIL, &fcode, &fsh);
+    static afxString const vertex_shader = AFX_STATIC_STRING_R(
+        PUSH(Mtx)
+        {
+           mat4 ProjMtx;
+        };
+        IN(0, vec2, Position);
+        IN(1, vec2, TexCoord);
+        IN(2, vec4, Color);
+        out vec2 Frag_UV;
+        out vec4 Frag_Color;
+        void main() {
+           Frag_UV = TexCoord;
+           Frag_Color = Color;
+           gl_Position = ProjMtx * vec4(Position.xy, 0, 1);
+        }
+        );
+    static afxString const fragment_shader = AFX_STATIC_STRING_R(
+        precision mediump float;
+        TEXTURE(0, 0, sampler2D, Texture);
+        in vec2 Frag_UV;
+        in vec4 Frag_Color;
+        OUT(0, vec4, Out_Color);
+        void main(){
+           Out_Color = Frag_Color * texture(Texture, Frag_UV.st);
+        }
+        );
 
     avxVertexLayout vlay = { 0 };
     vlay.binCnt = 1;
-    vlay.bins[0].instRate = 0;
-    vlay.bins[0].pin = 0;
-    vlay.bins[0].attrCnt = 3;
-    vlay.attrs[0].fmt = avxFormat_RG32f;
-    vlay.attrs[0].location = 0;
-    vlay.attrs[0].offset = offsetof(struct nk_afx_vertex, position);
-    vlay.attrs[1].fmt = avxFormat_RG32f;
-    vlay.attrs[1].location = 1;
-    vlay.attrs[1].offset = offsetof(struct nk_afx_vertex, uv);
-    vlay.attrs[2].fmt = avxFormat_RGBA8un;
-    vlay.attrs[2].location = 2;
-    vlay.attrs[2].offset = offsetof(struct nk_afx_vertex, col);
+    vlay.bins[0] = AVX_VERTEX_STREAM(0, 0, 0);
+    vlay.attrCnt = 3;
+    vlay.attrs[0] = AVX_VERTEX_ATTR(0, 0, offsetof(struct nk_afx_vertex, position), avxFormat_RG32f);
+    vlay.attrs[1] = AVX_VERTEX_ATTR(1, 0, offsetof(struct nk_afx_vertex, uv), avxFormat_RG32f);
+    vlay.attrs[2] = AVX_VERTEX_ATTR(2, 0, offsetof(struct nk_afx_vertex, col), avxFormat_RGBA8un);
     avxVertexInput vdecl;
-    AvxDeclareVertexInputs(dev->dsys, 1, &vlay, &vdecl);
+    AvxAcquireVertexInputs(dev->dsys, 1, &vlay, &vdecl);
 
 #if 0
     glEnable(GL_BLEND);
@@ -219,6 +224,19 @@ nk_afx_device_create(struct nk_afx* afx)
     glEnable(GL_SCISSOR_TEST);
     glActiveTexture(GL_TEXTURE0);
 #endif
+
+    avxShader codb;
+    AvxAcquireShaders(dev->dsys, 1, NIL, &codb);
+    AFX_ASSERT_OBJECTS(afxFcc_SHD, 1, &codb);
+
+    avxShaderSpecialization specs[8] = { 0 };
+    specs[0].stage = avxShaderType_VERTEX;
+    specs[0].prog = AFX_STRING("guiVsh");
+    specs[1].stage = avxShaderType_FRAGMENT;
+    specs[1].prog = AFX_STRING("guiFsh");
+    AvxCompileShader(codb, &specs[0].prog, &vertex_shader);
+    AvxCompileShader(codb, &specs[1].prog, &fragment_shader);
+    
     avxPipeline pip;
     avxPipelineConfig pipb = { 0 };
     pipb.primTop = avxTopology_TRI_LIST;
@@ -236,27 +254,17 @@ nk_afx_device_create(struct nk_afx* afx)
     pipb.colorOuts[0].blendConfig.aSrcFactor = avxBlendFactor_SRC_A;
     pipb.colorOuts[0].blendConfig.aDstFactor = avxBlendFactor_ONE;
     pipb.colorOuts[0].blendConfig.aBlendOp = avxBlendOp_ADD;
+    pipb.codb = codb;
+    pipb.progCnt = 2;
+    pipb.progSpecs = specs;
     pipb.vin = vdecl;
-    AvxAssemblePipelines(dev->dsys, 1, &pipb, &pip);
-    
-    avxShaderSpecialization shdSpecs[]=
-    {
-        {
-            .stage = avxShaderType_VERTEX,
-            .shd = vsh
-        },
-        {
-            .stage = avxShaderType_FRAGMENT,
-            .shd = fsh
-        }
-    };
+    AvxAssembleGfxPipelines(dev->dsys, 1, &pipb, &pip);
+    AFX_ASSERT_OBJECTS(afxFcc_PIP, 1, &pip);
+    AfxDisposeObjects(1, &vdecl);
+    AfxDisposeObjects(1, &codb);
 
-    AvxRelinkPipelineFunction(pip, 2, shdSpecs);
     dev->pip = pip;
 
-    AfxDisposeObjects(1, &vsh);
-    AfxDisposeObjects(1, &fsh);
-    AfxDisposeObjects(1, &vdecl);
 
     {
         /* buffer setup */
@@ -345,7 +353,8 @@ nk_afx_device_upload_atlas(struct nk_afx* afx, const void *image, int width, int
     avxSamplerConfig scfg = { 0 };
     scfg.magnify = avxTexelFilter_LINEAR;
     scfg.minify = avxTexelFilter_LINEAR;
-    AvxDeclareSamplers(dev->dsys, 1, &scfg, &samp);
+    AvxConfigureSampler(dev->dsys, &scfg);
+    AvxAcquireSamplers(dev->dsys, 1, &scfg, &samp);
     dev->font_samp = samp;
 }
 
@@ -396,7 +405,7 @@ nk_afx_render(struct nk_afx* afx, enum nk_anti_aliasing AA, int max_vertex_buffe
     glViewport(0, 0, (GLsizei)afx->display_width, (GLsizei)afx->display_height);
 #endif
 
-    AvxCmdBindPipeline(dctx, 0, dev->pip, NIL, NIL);
+    AvxCmdBindPipeline(dctx, dev->pip, NIL, NIL);
 
     AvxCmdPushConstants(dctx, 0, sizeof(ortho), ortho);
 
@@ -479,11 +488,11 @@ nk_afx_render(struct nk_afx* afx, enum nk_anti_aliasing AA, int max_vertex_buffe
             glBindTexture(GL_TEXTURE_2D, (GLuint)cmd->texture.id);
 #endif
 #if 0
-            AvxCmdBindSamplers(dctx, avxBus_DRAW, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
+            AvxCmdBindSamplers(dctx, avxBus_GFX, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
 #else
-            AvxCmdBindSamplers(dctx, avxBus_DRAW, 0, 0, 1, &dev->font_samp); // <<<<<<<<<<<<<<
+            AvxCmdBindSamplers(dctx, avxBus_GFX, 0, 0, 1, (avxSampler[]) { dev->font_samp }); // <<<<<<<<<<<<<<
 #endif
-            AvxCmdBindRasters(dctx, avxBus_DRAW, 0, 0, 1, &cmd->texture.ptr); // <<<<<<<<<<<<<<
+            AvxCmdBindRasters(dctx, avxBus_GFX, 0, 0, 1, (avxRaster[]) { cmd->texture.ptr }); // <<<<<<<<<<<<<<
 
 #if 0
             glScissor(
@@ -575,7 +584,7 @@ nk_afx_clipboard_paste(nk_handle usr, struct nk_text_edit *edit)
     struct nk_afx* afx = (struct nk_afx*)usr.ptr;
     afxString4096 s;
     AfxMakeString4096(&s, NIL);
-    afxUnit len = AfxGetClipboardContent(&s.s);
+    afxUnit len = AfxGetClipboardContent(0, 0, NIL, &s.s);
     if (len) nk_textedit_paste(edit, s.s.start, s.s.len);
     (void)usr;
 }
@@ -592,7 +601,7 @@ nk_afx_clipboard_copy(nk_handle usr, const char *text, int len)
     str[len] = '\0';
     afxString s;
     AfxMakeString(&s, 0, str, 0);
-    AfxSetClipboardContent(&s);
+    AfxSetClipboardContent(0, 0, NIL, &s);
     free(str);
 }
 
@@ -683,8 +692,8 @@ nk_afx_new_frame(struct nk_afx* afx)
         afxSetInputMode(afx->win, AFX_CURSOR, AFX_CURSOR_NORMAL);
 #endif
 
-    afxSession ses;
-    AfxGetSession(&ses);
+    afxEnvironment env;
+    AfxGetActiveEnvironment(&env);
 
     nk_input_key(ctx, NK_KEY_DEL, AfxIsKeyPressed(0, afxKey_DELETE));
     nk_input_key(ctx, NK_KEY_ENTER, AfxIsKeyPressed(0, afxKey_RET));
@@ -720,7 +729,7 @@ nk_afx_new_frame(struct nk_afx* afx)
     }
 
     afxRect cursRect;
-    AfxGetCursorPlacement(NIL, win, NIL, &cursRect);
+    AfxGetCursorPlacement(0, win, FALSE, &cursRect);
     nk_input_motion(ctx, (int)cursRect.x, (int)cursRect.y);
     x = cursRect.x;
     y = cursRect.y;
